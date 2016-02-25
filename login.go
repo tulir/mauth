@@ -55,6 +55,11 @@ func (sys System) Login(username string, password []byte) (string, error) {
 	return authToken, nil
 }
 
+// LoginHTTPD calls LoginHTTP, but doesn't return anything. Best suited for use with http.HandleFunc
+func (sys System) LoginHTTPD(w http.ResponseWriter, r *http.Request) {
+	sys.LoginHTTP(w, r)
+}
+
 // LoginHTTP handles a HTTP login request.
 func (sys System) LoginHTTP(w http.ResponseWriter, r *http.Request) (string, error) {
 	if r.Method != "POST" {

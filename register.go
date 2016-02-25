@@ -61,6 +61,11 @@ func (sys System) Register(username string, password []byte) (string, error) {
 	return authToken, nil
 }
 
+// RegisterHTTPD calls RegisterHTTP, but doesn't return anything. Best suited for use with http.HandleFunc
+func (sys System) RegisterHTTPD(w http.ResponseWriter, r *http.Request) {
+	sys.LoginHTTP(w, r)
+}
+
 // RegisterHTTP handles a HTTP register request.
 func (sys System) RegisterHTTP(w http.ResponseWriter, r *http.Request) (string, error) {
 	if r.Method != "POST" {
