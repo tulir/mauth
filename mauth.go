@@ -34,3 +34,16 @@ func Create(database *sql.DB) (System, error) {
 	}
 	return System{database}, nil
 }
+
+func validName(name string) bool {
+	if len(name) < 3 || len(name) > 16 {
+		return false
+	}
+	for _, char := range name {
+		if (char >= 48 && char <= 57) || (char >= 65 && char <= 90) || (char >= 97 && char <= 122) || char == 95 || char == 45 {
+			continue
+		}
+		return false
+	}
+	return true
+}
