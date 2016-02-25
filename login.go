@@ -25,33 +25,23 @@ import (
 // Login generates an authentication token for the user.
 func (sys *System) Login(username string, password []byte) (string, error) {
 	var correctPassword = false
-	// Get the password of the given user.
 	result, err := sys.db.Query("SELECT password FROM users WHERE username=?;", username)
-	// Check if there was an error.
 	if err == nil {
 		defer result.Close()
-		// Loop through the result rows.
 		for result.Next() {
-			// Check if the current result has an error.
 			if result.Err() != nil {
 				break
 			}
-			// Define the byte array for the password hash in the sys.db.
+			// Read the data in the current row.
 			var hash []byte
-			// Scan the hash from the sys.db result into the previously defined byte array.
 			result.Scan(&hash)
-			// Make sure the scan was successful.
 			if len(hash) != 0 {
-				// Compare the hash and the given password.
 				err = bcrypt.CompareHashAndPassword(hash, password)
-				// Set the correctPassword field to the correct value.
 				correctPassword = err == nil
 			}
 		}
 	}
-	// Check if the password was correct.
 	if !correctPassword {
-		// Return error if the password was wrong.
 		return "", fmt.Errorf("incorrectpassword")
 	}
 
@@ -60,8 +50,6 @@ func (sys *System) Login(username string, password []byte) (string, error) {
 		return "", fmt.Errorf("authtoken-generror")
 	}
 
-	// Update sys.db.
 	sys.db.Query("UPDATE users SET authtoken=? WHERE username=?;", authHash, username)
-	// Return auth token.
 	return authToken, nil
 }

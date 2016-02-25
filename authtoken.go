@@ -27,22 +27,17 @@ import (
 // CheckAuthToken checks if the given auth token is valid for the given user.
 func (sys *System) CheckAuthToken(username string, authtoken []byte) error {
 	result, err := sys.db.Query("SELECT authtoken FROM users WHERE username=?;", username)
-	// Check if there was an error.
 	if err == nil {
 		defer result.Close()
-		// Loop through the result rows.
 		for result.Next() {
-			// Check if the current result has an error.
 			if result.Err() != nil {
 				break
 			}
-			// Define the byte array for the password hash in the sys.db.
+			// Read the data in the current row.
 			var hash []byte
-			// Scan the hash from the sys.db result into the previously defined byte array.
 			result.Scan(&hash)
-			// Make sure the scan was successful.
+
 			if len(hash) != 0 {
-				// Compare the hash and the given password.
 				err = bcrypt.CompareHashAndPassword(hash, authtoken)
 				if err != nil {
 					return fmt.Errorf("invalid-authtoken")
@@ -56,25 +51,18 @@ func (sys *System) CheckAuthToken(username string, authtoken []byte) error {
 
 func generateAuthToken() (string, []byte) {
 	var authToken string
-	// Create a byte array.
 	b := make([]byte, 32)
-	// Fill it with cryptographically random bytes.
+	// Fill the byte array with cryptographically random bytes.
 	n, err := rand.Read(b)
-	// Check if there was an error.
 	if n == len(b) && err == nil {
-		// Encode the bytes with base64.
 		authToken = base64.RawStdEncoding.EncodeToString(b)
 		if authToken == "" {
-			// Generation failed, return error.
 			return "", nil
 		}
 	}
 
-	// Generate the bcrypt hash from the generated authentication token.
 	authHash, err := bcrypt.GenerateFromPassword([]byte(authToken), bcrypt.DefaultCost-3)
-	// Make sure nothing went wrong.
 	if err != nil {
-		// Something went wrong, return error.
 		return "", nil
 	}
 	return authToken, authHash

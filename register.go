@@ -24,11 +24,8 @@ import (
 
 // Register creates an account and generates an authentication token for it.
 func (sys *System) Register(username string, password []byte) (string, error) {
-	// Generate the bcrypt hash from the given password.
 	hash, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
-	// Make sure nothing went wrong.
 	if err != nil {
-		// Something went wrong, return error.
 		return "", fmt.Errorf("hashgen")
 	}
 
@@ -37,30 +34,25 @@ func (sys *System) Register(username string, password []byte) (string, error) {
 		return "", fmt.Errorf("authtoken-generror")
 	}
 
-	// Check if the username already exists in the sys.db.
 	result, err := sys.db.Query("SELECT EXISTS(SELECT 1 FROM users WHERE username=?)", username)
 	if err == nil {
 		for result.Next() {
 			if result.Err() != nil {
 				break
 			}
+			// Read the data in the current row.
 			var res int
 			result.Scan(&res)
 			if res == 1 {
-				// User exists, return error.
 				return "", fmt.Errorf("userexists")
 			}
 		}
 	}
 
-	// Insert user into sys.db.
 	_, err = sys.db.Query("INSERT INTO users VALUES(?, ?, ?)", username, hash, authHash)
-	// Make sure nothing went wrong.
 	if err != nil {
-		// Something went wrong, return error.
 		return "", fmt.Errorf("inserterror")
 	}
 
-	// Return the auth token.
 	return authToken, nil
 }
