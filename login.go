@@ -20,6 +20,7 @@ package mauth
 import (
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
+	"net/http"
 )
 
 // Login generates an authentication token for the user.
@@ -52,4 +53,35 @@ func (sys System) Login(username string, password []byte) (string, error) {
 
 	sys.db.Query("UPDATE users SET authtoken=? WHERE username=?;", authHash, username)
 	return authToken, nil
+}
+
+// LoginHTTP handles a HTTP login request.
+func (sys System) LoginHTTP(w http.ResponseWriter, r *http.Request) error {
+	if r.Method != "POST" {
+		w.Header().Add("Allow", "POST")
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return fmt.Errorf("illegalmethod")
+	}
+	decoder := decoder(r.Body)
+	var af AuthForm
+	err := decoder.Decode(&af)
+	if err != nil || len(af.Password) == 0 || len(af.Username) == 0 {
+		//log.Debugf("%[1]s sent an invalid login request.", ip)
+		w.WriteHeader(http.StatusBadRequest)
+		return fmt.Errorf("invalidrequest")
+	}
+	authToken, err := sys.Login(af.Username, []byte(af.Password))
+	if err != nil {
+		if err.Error() == "incorrectpassword" {
+			//log.Debugf("%[1]s tried to log in as %[2]s with the incorrect password.", ip, af.Username)
+			output(w, AuthResponse{Error: "incorrectpassword", ErrorReadable: "The username or password was incorrect."}, http.StatusUnauthorized)
+			return fmt.Errorf("incorrectpassword")
+		}
+		//log.Errorf("Login error: %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return err
+	}
+	//log.Debugf("%[1]s logged in as %[2]s successfully.", ip, af.Username)
+	output(w, AuthResponse{AuthToken: authToken}, http.StatusOK)
+	return nil
 }
