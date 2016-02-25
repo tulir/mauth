@@ -72,7 +72,6 @@ func (sys System) RegisterHTTP(w http.ResponseWriter, r *http.Request) (string, 
 	var af AuthForm
 	err := decoder.Decode(&af)
 	if err != nil || len(af.Password) == 0 || len(af.Username) == 0 {
-		//log.Debugf("%[1]s sent an invalid register request.", ip)
 		w.WriteHeader(http.StatusBadRequest)
 		if err != nil {
 			return err.Error(), fmt.Errorf("invalidrequest")
@@ -82,18 +81,15 @@ func (sys System) RegisterHTTP(w http.ResponseWriter, r *http.Request) (string, 
 	authToken, err := sys.Register(af.Username, []byte(af.Password))
 	if err != nil {
 		if err.Error() == "userexists" {
-			//log.Debugf("%[1]s tried to register the name %[2]s, but it is already in use.", ip, af.Username)
 			output(w, AuthResponse{Error: "userexists", ErrorReadable: "The given username is already in use."}, http.StatusNotAcceptable)
 			return af.Username, fmt.Errorf("userexists")
 		} else if err.Error() == "invalidname" {
 			output(w, AuthResponse{Error: "invalidname", ErrorReadable: "The name you entered is invalid. Allowed names: [a-zA-Z0-9_-]{3,16}"}, http.StatusNotAcceptable)
 			return af.Username, fmt.Errorf("invalidname")
 		}
-		//log.Errorf("Register error: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return "", err
 	}
-	//log.Debugf("%[1]s registered as %[2]s successfully.", ip, af.Username)
 	output(w, AuthResponse{AuthToken: authToken}, http.StatusOK)
 	return af.Username, nil
 }

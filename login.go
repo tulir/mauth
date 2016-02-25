@@ -66,7 +66,6 @@ func (sys System) LoginHTTP(w http.ResponseWriter, r *http.Request) (string, err
 	var af AuthForm
 	err := decoder.Decode(&af)
 	if err != nil || len(af.Password) == 0 || len(af.Username) == 0 {
-		//log.Debugf("%[1]s sent an invalid login request.", ip)
 		w.WriteHeader(http.StatusBadRequest)
 		if err != nil {
 			return err.Error(), fmt.Errorf("invalidrequest")
@@ -76,15 +75,12 @@ func (sys System) LoginHTTP(w http.ResponseWriter, r *http.Request) (string, err
 	authToken, err := sys.Login(af.Username, []byte(af.Password))
 	if err != nil {
 		if err.Error() == "incorrectpassword" {
-			//log.Debugf("%[1]s tried to log in as %[2]s with the incorrect password.", ip, af.Username)
 			output(w, AuthResponse{Error: "incorrectpassword", ErrorReadable: "The username or password was incorrect."}, http.StatusUnauthorized)
 			return af.Username, fmt.Errorf("incorrectpassword")
 		}
-		//log.Errorf("Login error: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return "", err
 	}
-	//log.Debugf("%[1]s logged in as %[2]s successfully.", ip, af.Username)
 	output(w, AuthResponse{AuthToken: authToken}, http.StatusOK)
 	return af.Username, nil
 }
