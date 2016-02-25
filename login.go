@@ -56,11 +56,11 @@ func (sys System) Login(username string, password []byte) (string, error) {
 }
 
 // LoginHTTP handles a HTTP login request.
-func (sys System) LoginHTTP(w http.ResponseWriter, r *http.Request) error {
+func (sys System) LoginHTTP(w http.ResponseWriter, r *http.Request) (string, error) {
 	if r.Method != "POST" {
 		w.Header().Add("Allow", "POST")
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		return fmt.Errorf("illegalmethod")
+		return r.Method, fmt.Errorf("illegalmethod")
 	}
 	decoder := decoder(r.Body)
 	var af AuthForm
@@ -68,20 +68,23 @@ func (sys System) LoginHTTP(w http.ResponseWriter, r *http.Request) error {
 	if err != nil || len(af.Password) == 0 || len(af.Username) == 0 {
 		//log.Debugf("%[1]s sent an invalid login request.", ip)
 		w.WriteHeader(http.StatusBadRequest)
-		return fmt.Errorf("invalidrequest")
+		if err != nil {
+			return err.Error(), fmt.Errorf("invalidrequest")
+		}
+		return "", fmt.Errorf("invalidrequest")
 	}
 	authToken, err := sys.Login(af.Username, []byte(af.Password))
 	if err != nil {
 		if err.Error() == "incorrectpassword" {
 			//log.Debugf("%[1]s tried to log in as %[2]s with the incorrect password.", ip, af.Username)
 			output(w, AuthResponse{Error: "incorrectpassword", ErrorReadable: "The username or password was incorrect."}, http.StatusUnauthorized)
-			return fmt.Errorf("incorrectpassword")
+			return af.Username, fmt.Errorf("incorrectpassword")
 		}
 		//log.Errorf("Login error: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		return err
+		return "", err
 	}
 	//log.Debugf("%[1]s logged in as %[2]s successfully.", ip, af.Username)
 	output(w, AuthResponse{AuthToken: authToken}, http.StatusOK)
-	return nil
+	return af.Username, nil
 }

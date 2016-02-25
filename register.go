@@ -62,11 +62,11 @@ func (sys System) Register(username string, password []byte) (string, error) {
 }
 
 // RegisterHTTP handles a HTTP register request.
-func (sys System) RegisterHTTP(w http.ResponseWriter, r *http.Request) error {
+func (sys System) RegisterHTTP(w http.ResponseWriter, r *http.Request) (string, error) {
 	if r.Method != "POST" {
 		w.Header().Add("Allow", "POST")
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		return fmt.Errorf("illegalmethod")
+		return r.Method, fmt.Errorf("illegalmethod")
 	}
 	decoder := decoder(r.Body)
 	var af AuthForm
@@ -74,23 +74,26 @@ func (sys System) RegisterHTTP(w http.ResponseWriter, r *http.Request) error {
 	if err != nil || len(af.Password) == 0 || len(af.Username) == 0 {
 		//log.Debugf("%[1]s sent an invalid register request.", ip)
 		w.WriteHeader(http.StatusBadRequest)
-		return fmt.Errorf("invalidrequest")
+		if err != nil {
+			return err.Error(), fmt.Errorf("invalidrequest")
+		}
+		return "", fmt.Errorf("invalidrequest")
 	}
 	authToken, err := sys.Register(af.Username, []byte(af.Password))
 	if err != nil {
 		if err.Error() == "userexists" {
 			//log.Debugf("%[1]s tried to register the name %[2]s, but it is already in use.", ip, af.Username)
 			output(w, AuthResponse{Error: "userexists", ErrorReadable: "The given username is already in use."}, http.StatusNotAcceptable)
-			return fmt.Errorf("userexists")
+			return af.Username, fmt.Errorf("userexists")
 		} else if err.Error() == "invalidname" {
 			output(w, AuthResponse{Error: "invalidname", ErrorReadable: "The name you entered is invalid. Allowed names: [a-zA-Z0-9_-]{3,16}"}, http.StatusNotAcceptable)
-			return fmt.Errorf("invalidname")
+			return af.Username, fmt.Errorf("invalidname")
 		}
 		//log.Errorf("Register error: %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
-		return err
+		return "", err
 	}
 	//log.Debugf("%[1]s registered as %[2]s successfully.", ip, af.Username)
 	output(w, AuthResponse{AuthToken: authToken}, http.StatusOK)
-	return nil
+	return af.Username, nil
 }
