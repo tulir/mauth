@@ -1,4 +1,4 @@
-// go-mauth - Maunium Authentication System for Golang.
+// mauth - Maunium Authentication System for Golang.
 // Copyright (C) 2016 Tulir Asokan
 
 // This program is free software: you can redistribute it and/or modify
