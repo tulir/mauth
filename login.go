@@ -23,7 +23,7 @@ import (
 )
 
 // Login generates an authentication token for the user.
-func (sys *System) Login(username string, password []byte) (string, error) {
+func (sys System) Login(username string, password []byte) (string, error) {
 	var correctPassword = false
 	result, err := sys.db.Query("SELECT password FROM users WHERE username=?;", username)
 	if err == nil {

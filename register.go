@@ -23,7 +23,7 @@ import (
 )
 
 // Register creates an account and generates an authentication token for it.
-func (sys *System) Register(username string, password []byte) (string, error) {
+func (sys System) Register(username string, password []byte) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword(password, bcrypt.DefaultCost)
 	if err != nil {
 		return "", fmt.Errorf("hashgen")

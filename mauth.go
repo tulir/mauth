@@ -27,10 +27,10 @@ type System struct {
 }
 
 // Create a System.
-func Create(database *sql.DB) (*System, error) {
+func Create(database *sql.DB) (System, error) {
 	_, err := database.Exec("CREATE TABLE IF NOT EXISTS users (username VARCHAR(16) PRIMARY KEY, password BINARY(60) NOT NULL, authtoken BINARY(60));")
 	if err != nil {
-		return nil, err
+		return System{}, err
 	}
-	return &System{database}, nil
+	return System{database}, nil
 }
