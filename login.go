@@ -23,8 +23,7 @@ import (
 	"net/http"
 )
 
-// Login generates an authentication token for the user.
-func (sys System) Login(username string, password []byte) (string, error) {
+func (sys isystem) Login(username string, password []byte) (string, error) {
 	var correctPassword = false
 	result, err := sys.db.Query("SELECT password FROM users WHERE username=?;", username)
 	if err == nil {
@@ -55,13 +54,11 @@ func (sys System) Login(username string, password []byte) (string, error) {
 	return authToken, nil
 }
 
-// LoginHTTPD calls LoginHTTP, but doesn't return anything. Best suited for use with http.HandleFunc
-func (sys System) LoginHTTPD(w http.ResponseWriter, r *http.Request) {
+func (sys isystem) LoginHTTPD(w http.ResponseWriter, r *http.Request) {
 	sys.LoginHTTP(w, r)
 }
 
-// LoginHTTP handles a HTTP login request.
-func (sys System) LoginHTTP(w http.ResponseWriter, r *http.Request) (string, error) {
+func (sys isystem) LoginHTTP(w http.ResponseWriter, r *http.Request) (string, error) {
 	if r.Method != "POST" {
 		w.Header().Add("Allow", "POST")
 		w.WriteHeader(http.StatusMethodNotAllowed)

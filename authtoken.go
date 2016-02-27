@@ -24,8 +24,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// CheckAuthToken checks if the given auth token is valid for the given user.
-func (sys System) CheckAuthToken(username string, authtoken []byte) error {
+func (sys isystem) CheckAuthToken(username string, authtoken []byte) error {
 	result, err := sys.db.Query("SELECT authtoken FROM users WHERE username=?;", username)
 	if err == nil {
 		defer result.Close()

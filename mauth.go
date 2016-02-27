@@ -19,10 +19,30 @@ package mauth
 
 import (
 	"database/sql"
+	"net/http"
 )
 
 // System is an instance of Maunium Authentication.
-type System struct {
+type System interface {
+	// Register creates an account and generates an authentication token for it.
+	Register(username string, password []byte) (string, error)
+	// RegisterHTTP handles a HTTP register request.
+	RegisterHTTP(w http.ResponseWriter, r *http.Request) (string, error)
+	// RegisterHTTPD calls RegisterHTTP, but doesn't return anything. Best suited for use with http.HandleFunc
+	RegisterHTTPD(w http.ResponseWriter, r *http.Request)
+
+	// Login generates an authentication token for the user.
+	Login(username string, password []byte) (string, error)
+	// LoginHTTP handles a HTTP login request.
+	LoginHTTP(w http.ResponseWriter, r *http.Request) (string, error)
+	// LoginHTTPD calls LoginHTTP, but doesn't return anything. Best suited for use with http.HandleFunc
+	LoginHTTPD(w http.ResponseWriter, r *http.Request)
+
+	// CheckAuthToken checks if the given auth token is valid for the given user.
+	CheckAuthToken(username string, authtoken []byte) error
+}
+
+type isystem struct {
 	db *sql.DB
 }
 
@@ -30,9 +50,9 @@ type System struct {
 func Create(database *sql.DB) (System, error) {
 	_, err := database.Exec("CREATE TABLE IF NOT EXISTS users (username VARCHAR(16) PRIMARY KEY, password BINARY(60) NOT NULL, authtoken BINARY(60));")
 	if err != nil {
-		return System{}, err
+		return isystem{}, err
 	}
-	return System{database}, nil
+	return isystem{database}, nil
 }
 
 func validName(name string) bool {
